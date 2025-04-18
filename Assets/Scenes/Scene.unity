@@ -701,11 +701,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1916503238}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 50, y: -50}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 200}
   m_SizeDelta: {x: 160, y: 50}
-  m_Pivot: {x: 0, y: 1}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &651635791
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -975,14 +975,14 @@ MonoBehaviour:
   objectInfo: {fileID: 651635791}
   m_OcclusionManager: {fileID: 348924116}
   m_CameraManager: {fileID: 348924113}
+  m_RawImage: {fileID: 2117084632}
+  m_RawCameraImage: {fileID: 542055568}
+  m_DepthMaterial: {fileID: 2100000, guid: 3518299564ad40c488f2036459c24a33, type: 2}
   audioSources:
   - {fileID: 975916388}
   - {fileID: 975916391}
   - {fileID: 975916390}
   - {fileID: 975916389}
-  m_RawImage: {fileID: 2117084632}
-  m_RawCameraImage: {fileID: 542055568}
-  m_DepthMaterial: {fileID: 2100000, guid: 3518299564ad40c488f2036459c24a33, type: 2}
   depthToggle: {fileID: 1604131783}
 --- !u!4 &975916387
 Transform:

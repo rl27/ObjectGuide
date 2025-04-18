@@ -126,24 +126,26 @@ public class DepthImage : MonoBehaviour
         }
         else curTime += Time.unscaledDeltaTime;
 
-        // Check for object
-        // if (RunYOLO.objectDetected) {
-        //     // Convert object pixel location in the 480x480 camera image to a pixel location in the depth image
-        //     int depthX = (int) (RunYOLO.objectPosition.y / 480f);
-        //     int depthY = (int) (RunYOLO.objectPosition.x / 480f);
+        // Check if an object was detected
+        // Assumptions: portrait mode; depth image height = RGB image height;
+        //     depth image resolution = 480x640; model input/output resolution = 480x480
+        if (RunYOLO.objectDetected) {
+            // Convert object pixel location in the 480x480 camera image to a pixel location in the depth image
+            int depthX = (int) (depthWidth / 2 + depthWidth / 640f * RunYOLO.objectPosition.y);
+            int depthY = (int) (depthHeight / 2 - depthWidth / 640f * RunYOLO.objectPosition.x);
 
-        //     // Get depth & position of object relative to camera
-        //     float depth = GetDepth(depthX, depthY);
-        //     RunYOLO.objectPos3d = ComputeVertex(depthX, depthY, depth);
-        //     objectInfo.text = String.Format("{0}m, {1}°", RunYOLO.objectPos3d.magnitude.ToString("F2"),
-        //                                                   Math.Atan2(RunYOLO.objectPos3d.x, RunYOLO.objectPos3d.z).ToString("F2"));
+            // Get depth & position of object relative to camera
+            float depth = GetDepth(depthX, depthY);
+            RunYOLO.objectPos3d = ComputeVertex(depthX, depthY, depth);
+            objectInfo.text = String.Format("{0}m, {1}°", RunYOLO.objectPos3d.magnitude.ToString("F2"),
+                                                          Math.Atan2(RunYOLO.objectPos3d.x, RunYOLO.objectPos3d.z).ToString("F2"));
 
-        //     // Play audio; fastest rate is 11Hz when next to object, slowest rate is 2Hz when at least 5m from object
-        //     float rate = rate = Mathf.Lerp(10, 2, depth/5);
-        //     PlayCollision(0, 1/rate - audioDuration);
+            // Play audio; fastest rate is 11Hz when next to object, slowest rate is 2Hz when at least 5m from object
+            float rate = rate = Mathf.Lerp(10, 2, depth/5);
+            PlayCollision(0, 1/rate - audioDuration);
 
-        //     RunYOLO.objectDetected = false;
-        // }
+            RunYOLO.objectDetected = false;
+        }
     }
 
     private bool UpdateDepthImages()
