@@ -136,10 +136,6 @@ public class DepthImage : MonoBehaviour
             // Convert object pixel location in the 480x480 camera image to a pixel location in the depth image
             int depthX = (int) (depthWidth / 2 + depthWidth / 640f * RunYOLO.objectPosition.y);
             int depthY = (int) (depthHeight / 2 - depthWidth / 640f * RunYOLO.objectPosition.x);
-            Debug.unityLogger.Log("mytag3", RunYOLO.objectPosition.y);
-            Debug.unityLogger.Log("mytag4", RunYOLO.objectPosition.x);
-            Debug.unityLogger.Log("mytag5", depthX);
-            Debug.unityLogger.Log("mytag6", depthY);
 
             // Get depth & position of object relative to camera
             float depth = GetDepth(depthX, depthY);
