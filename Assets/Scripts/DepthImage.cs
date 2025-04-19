@@ -103,8 +103,6 @@ public class DepthImage : MonoBehaviour
         audioDuration = (double) audioSources[0].clip.samples / audioSources[0].clip.frequency;
 
         yolo = GameObject.Find("ScriptHandler").GetComponent<RunYOLO>();
-        Debug.unityLogger.Log("mytag", Screen.height);
-        Debug.unityLogger.Log("mytag", Screen.width);
     }
 
     void OnCameraFrameReceived(ARCameraFrameEventArgs args)
@@ -118,7 +116,12 @@ public class DepthImage : MonoBehaviour
     {
         // Show the FPS
         info.text = $"{Convert.ToInt32(1.0 / Time.unscaledDeltaTime)}\n";
+    }
 
+    // The NMS layer that needs to be run for the YOLO model messes with the audio scheduling
+    // So I'm trying FixedUpdate to not have audio stutters. Might have unforeseen consequences
+    void FixedUpdate()
+    {
         // Update timer for collision audio
         if (lastDSP != AudioSettings.dspTime) {
             lastDSP = AudioSettings.dspTime;
@@ -133,15 +136,20 @@ public class DepthImage : MonoBehaviour
             // Convert object pixel location in the 480x480 camera image to a pixel location in the depth image
             int depthX = (int) (depthWidth / 2 + depthWidth / 640f * RunYOLO.objectPosition.y);
             int depthY = (int) (depthHeight / 2 - depthWidth / 640f * RunYOLO.objectPosition.x);
+            Debug.unityLogger.Log("mytag3", RunYOLO.objectPosition.y);
+            Debug.unityLogger.Log("mytag4", RunYOLO.objectPosition.x);
+            Debug.unityLogger.Log("mytag5", depthX);
+            Debug.unityLogger.Log("mytag6", depthY);
 
             // Get depth & position of object relative to camera
             float depth = GetDepth(depthX, depthY);
             RunYOLO.objectPos3d = ComputeVertex(depthX, depthY, depth);
+            float relativeDegree = Mathf.Rad2Deg * Mathf.Atan2(RunYOLO.objectPos3d.x, RunYOLO.objectPos3d.z);
             objectInfo.text = String.Format("{0}m, {1}°", RunYOLO.objectPos3d.magnitude.ToString("F2"),
                                                           Math.Atan2(RunYOLO.objectPos3d.x, RunYOLO.objectPos3d.z).ToString("F2"));
 
-            // Play audio; fastest rate is 11Hz when next to object, slowest rate is 2Hz when at least 5m from object
-            float rate = rate = Mathf.Lerp(10, 2, depth/5);
+            // Play audio; fastest rate is 10Hz when next to object, slowest rate is 1Hz when at least 5m from object
+            float rate = rate = Mathf.Lerp(10, 1, depth/5);
             PlayCollision(0, 1/rate - audioDuration);
 
             RunYOLO.objectDetected = false;
@@ -196,7 +204,7 @@ public class DepthImage : MonoBehaviour
         this.transform.position = position + new Vector3(Mathf.Sin(rad), 0, Mathf.Cos(rad));
 
         double nextSchedule = Math.Max(curTime, lastScheduled + audioDuration + delay);
-        while (nextSchedule - curTime < 0.2 && !audioSources[audioSelect].isPlaying) { // Schedule next audio if it will be needed soon
+        while (nextSchedule - curTime < 0.5 && !audioSources[audioSelect].isPlaying) { // Schedule next audio if it will be needed soon
             audioSources[audioSelect].PlayScheduled(nextSchedule);
             audioSelect = (audioSelect + 1) % audioSources.Length;
             lastScheduled = nextSchedule;
@@ -305,14 +313,15 @@ public class DepthImage : MonoBehaviour
     }
 
     // Given image pixel coordinates (x,y) and distance z, returns a point in local camera space, i.e. where camera is at (0,0,0) and z-axis is forward from camera
+    // Made some modifications from original code so that +x is right and +y is up
     public Vector3 ComputeVertex(int x, int y, float z)
     {
         Vector3 vertex = Vector3.negativeInfinity;
         if (z > 0) {
             float vertex_x = (x - principalPoint.x) * z / focalLength.x;
             float vertex_y = (y - principalPoint.y) * z / focalLength.y;
-            vertex.x = vertex_x;
-            vertex.y = -vertex_y;
+            vertex.x = -vertex_y;
+            vertex.y = -vertex_x;
             vertex.z = z;
         }
         return vertex;

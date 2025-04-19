@@ -40,10 +40,10 @@ public class RunYOLO : MonoBehaviour
     List<GameObject> boxPool = new();
 
     [Tooltip("Intersection over union threshold used for non-maximum suppression")]
-    [SerializeField, Range(0, 1)] float iouThreshold = 0.5f;
+    [SerializeField, Range(0, 1)] float iouThreshold = 0.3f;
 
     [Tooltip("Confidence score threshold used for non-maximum suppression")]
-    [SerializeField, Range(0, 1)] float scoreThreshold = 0.5f;
+    [SerializeField, Range(0, 1)] float scoreThreshold = 0.3f;
 
     Tensor<float> centersToCorners;
     public struct BoundingBox
@@ -142,30 +142,38 @@ public class RunYOLO : MonoBehaviour
     {
         var model1 = ModelLoader.Load(modelAsset);
 
-        centersToCorners = new Tensor<float>(new TensorShape(4, 4),
-        new float[]
-        {
-                    1,      0,      1,      0,
-                    0,      1,      0,      1,
-                    -0.5f,  0,      0.5f,   0,
-                    0,      -0.5f,  0,      0.5f
-        });
+        // Just do this if the model already has the post-processing incorporated
+        worker = new Worker(model1, backend);
 
-        // Here we transform the output of the model1 by feeding it through a Non-Max-Suppression layer.
-        var graph = new FunctionalGraph();
-        var inputs = graph.AddInputs(model1);
-        var modelOutput = FF.Forward(model1, inputs)[0];                        //shape=(1,84,8400)
-        var boxCoords = modelOutput[0, 0..4, ..].Transpose(0, 1);               //shape=(8400,4)
-        var allScores = modelOutput[0, 4.., ..];                                //shape=(80,8400)
-        var scores = FF.ReduceMax(allScores, 0);                                //shape=(8400)
-        var classIDs = FF.ArgMax(allScores, 0);                                 //shape=(8400)
-        var boxCorners = FF.MatMul(boxCoords, FF.Constant(centersToCorners));   //shape=(8400,4)
-        var indices = FF.NMS(boxCorners, scores, iouThreshold, scoreThreshold); //shape=(N)
-        var coords = FF.IndexSelect(boxCoords, 0, indices);                     //shape=(N,4)
-        var labelIDs = FF.IndexSelect(classIDs, 0, indices);                    //shape=(N)
+        // centersToCorners = new Tensor<float>(new TensorShape(4, 4),
+        // new float[]
+        // {
+        //             1,      0,      1,      0,
+        //             0,      1,      0,      1,
+        //             -0.5f,  0,      0.5f,   0,
+        //             0,      -0.5f,  0,      0.5f
+        // });
 
-        // Create worker to run model
-        worker = new Worker(graph.Compile(coords, labelIDs), backend);
+        // // Here we transform the output of the model1 by feeding it through a Non-Max-Suppression layer.
+        // var graph = new FunctionalGraph();
+        // var inputs = graph.AddInputs(model1);
+        // var modelOutput = FF.Forward(model1, inputs)[0];                        //shape=(1,84,8400)
+        // var boxCoords = modelOutput[0, 0..4, ..].Transpose(0, 1);               //shape=(8400,4)
+        // var allScores = modelOutput[0, 4.., ..];                                //shape=(80,8400)
+        // var scores = FF.ReduceMax(allScores, 0);                                //shape=(8400)
+        // var classIDs = FF.ArgMax(allScores, 0);                                 //shape=(8400)
+        // var boxCorners = FF.MatMul(boxCoords, FF.Constant(centersToCorners));   //shape=(8400,4)
+        // var indices = FF.NMS(boxCorners, scores, iouThreshold, scoreThreshold); //shape=(N)
+        // var coords = FF.IndexSelect(boxCoords, 0, indices);                     //shape=(N,4)
+        // var labelIDs = FF.IndexSelect(classIDs, 0, indices);                    //shape=(N)
+
+        // // Save the model in Sentis format
+        // var modelFinal = graph.Compile(coords, labelIDs);
+        // // ModelQuantizer.QuantizeWeights(QuantizationType.Uint8, ref modelFinal);
+        // ModelWriter.Save("Assets/Scripts/yolov11.sentis", modelFinal);
+
+        // // Create worker to run model
+        // worker = new Worker(graph.Compile(coords, labelIDs), backend);
     }
 
     private void Update()
@@ -176,7 +184,7 @@ public class RunYOLO : MonoBehaviour
     }
 
     bool working = false;
-    int layersPerFrame = 80;
+    int layersPerFrame = 83;
     public IEnumerator ExecuteML(Texture inputTex)
     {
         // Exit function if already running model
@@ -193,7 +201,7 @@ public class RunYOLO : MonoBehaviour
         var enumerator = worker.ScheduleIterable(inputTensor); 
         int it = 0;
         while (enumerator.MoveNext()) {
-            if (++it % layersPerFrame == 0)
+            if (++it % layersPerFrame == 0) // Wait for next frame once layersPerFrame layers are done
                 yield return null;
         }
 
@@ -226,7 +234,8 @@ public class RunYOLO : MonoBehaviour
             DrawBox(box, n, displayHeight * 0.05f);
 
             if (box.label == objectClass) {
-                objectPosition = new Vector2(box.centerX, box.centerY);
+                objectPosition = new Vector2(output[n, 0] - imageWidth / 2,
+                                             output[n, 1] - imageHeight / 2);
                 objectDetected = true;
             }
         }
