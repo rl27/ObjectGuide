@@ -34,8 +34,8 @@ public class RunYOLO : MonoBehaviour
     private Sprite borderSprite;
 
     // Image size for the model
-    private const int imageWidth = 480;
-    private const int imageHeight = 480;
+    private const int imageWidth = 640;
+    private const int imageHeight = 640;
 
     List<GameObject> boxPool = new();
 
@@ -74,8 +74,8 @@ public class RunYOLO : MonoBehaviour
         // Test object detection in Unity editor
         #if UNITY_EDITOR
             testing = true;
-            testPNG = VisionUtils.LoadPNG("Assets/Scripts/test.png");
-            displayImage.enabled = true;    
+            testPNG = VisionUtils.LoadPNG("Assets/Scripts/test3.png");
+            displayImage.enabled = true;
         #endif
 
         // Parse class labels
@@ -91,7 +91,7 @@ public class RunYOLO : MonoBehaviour
         resizer = new TextureResizer();
         resizeOptions = new TextureResizer.ResizeOptions()
         {
-            aspectMode = TextureResizer.AspectMode.Fill,
+            aspectMode = TextureResizer.AspectMode.Fit,
             rotationDegree = 90,
             mirrorHorizontal = false,
             mirrorVertical = false,
@@ -133,7 +133,7 @@ public class RunYOLO : MonoBehaviour
     {
         var model1 = ModelLoader.Load(modelAsset);
 
-        // Just do this if the model already has the post-processing incorporated
+        // // Just do this if the model already has the post-processing incorporated
         worker = new Worker(model1, backend);
 
         // centersToCorners = new Tensor<float>(new TensorShape(4, 4),
@@ -166,7 +166,7 @@ public class RunYOLO : MonoBehaviour
 
         // // Save the model in Sentis format
         // var modelFinal = graph.Compile(coords, labelIDs);
-        // // ModelQuantizer.QuantizeWeights(QuantizationType.Uint8, ref modelFinal);
+        // ModelQuantizer.QuantizeWeights(QuantizationType.Uint8, ref modelFinal);
         // ModelWriter.Save("Assets/Scripts/yolov11.sentis", modelFinal);
 
         // // Create worker to run model
@@ -177,7 +177,7 @@ public class RunYOLO : MonoBehaviour
     {
         #if !UNITY_EDITOR
             // Scale the locations of bounding boxes to be accurate on phone display
-            displayWidth = Mathf.Max(Screen.height, Screen.width) * 480 / 640;
+            displayWidth = Mathf.Max(Screen.height, Screen.width) * imageWidth / 640;
             displayHeight = displayWidth;
         #endif
 
@@ -187,7 +187,7 @@ public class RunYOLO : MonoBehaviour
     }
 
     bool working = false;
-    int layersPerFrame = 83;
+    int layersPerFrame = 106;
     public IEnumerator ExecuteML(Texture inputTex)
     {
         // Exit function if already running model
