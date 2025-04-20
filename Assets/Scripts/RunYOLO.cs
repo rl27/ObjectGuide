@@ -187,7 +187,7 @@ public class RunYOLO : MonoBehaviour
     }
 
     bool working = false;
-    int layersPerFrame = 106;
+    int layersPerFrame = 83;
     public IEnumerator ExecuteML(Texture inputTex)
     {
         // Exit function if already running model
