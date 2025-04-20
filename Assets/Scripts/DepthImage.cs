@@ -139,9 +139,11 @@ public class DepthImage : MonoBehaviour
         else curTime += Time.unscaledDeltaTime;
 
         // Check if an object was detected
+        // Assumptions: portrait mode; depth image height = RGB image height;
+        //              depth image resolution = 480x640; model input/output resolution = 480x480
         if (RunYOLO.objectDetected) {
             if (RunYOLO.objectUpdate) {
-                // Convert object pixel location in the output camera image to a pixel location in the depth image
+                // Convert object pixel location in the 480x480 camera image to a pixel location in the depth image
                 int depthX = (int) (depthWidth / 2 + depthWidth / 640f * RunYOLO.objectPosition.y);
                 int depthY = (int) (depthHeight / 2 - depthWidth / 640f * RunYOLO.objectPosition.x);
 
