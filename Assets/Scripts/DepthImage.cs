@@ -72,6 +72,8 @@ public class DepthImage : MonoBehaviour
     Vector2 focalLength = Vector2.zero;
     Vector2 principalPoint = Vector2.zero;
 
+    private Matrix4x4 localToWorldTransform = Matrix4x4.identity;
+    private Matrix4x4 screenRotation = Matrix4x4.Rotate(Quaternion.identity);
     private new Camera camera;
 
     public static Vector3 position;
@@ -122,6 +124,13 @@ public class DepthImage : MonoBehaviour
     // So I'm trying FixedUpdate to not have audio stutters. Might have unforeseen consequences
     void FixedUpdate()
     {
+        // Update camera info
+        position = camera.transform.position;
+        rotation = camera.transform.rotation.eulerAngles;
+        screenRotation = Matrix4x4.Rotate(Quaternion.Euler(0, 0, GetRotationForScreen()));
+        if (camera.transform.localToWorldMatrix != Matrix4x4.identity)
+            localToWorldTransform = camera.transform.localToWorldMatrix * screenRotation;
+
         // Update timer for collision audio
         if (lastDSP != AudioSettings.dspTime) {
             lastDSP = AudioSettings.dspTime;
@@ -131,24 +140,30 @@ public class DepthImage : MonoBehaviour
 
         // Check if an object was detected
         // Assumptions: portrait mode; depth image height = RGB image height;
-        //     depth image resolution = 480x640; model input/output resolution = 480x480
+        //              depth image resolution = 480x640; model input/output resolution = 480x480
         if (RunYOLO.objectDetected) {
-            // Convert object pixel location in the 480x480 camera image to a pixel location in the depth image
-            int depthX = (int) (depthWidth / 2 + depthWidth / 640f * RunYOLO.objectPosition.y);
-            int depthY = (int) (depthHeight / 2 - depthWidth / 640f * RunYOLO.objectPosition.x);
+            if (RunYOLO.objectUpdate) {
+                // Convert object pixel location in the 480x480 camera image to a pixel location in the depth image
+                int depthX = (int) (depthWidth / 2 + depthWidth / 640f * RunYOLO.objectPosition.y);
+                int depthY = (int) (depthHeight / 2 - depthWidth / 640f * RunYOLO.objectPosition.x);
 
-            // Get depth & position of object relative to camera
-            float depth = GetDepth(depthX, depthY);
-            RunYOLO.objectPos3d = ComputeVertex(depthX, depthY, depth);
-            float relativeDegree = Mathf.Rad2Deg * Mathf.Atan2(RunYOLO.objectPos3d.x, RunYOLO.objectPos3d.z);
+                if (depthX < depthWidth && depthX > 0 && depthY < depthHeight && depthY > 0) {
+                    // Get depth & position of object relative to camera
+                    float depth = GetDepth(depthX, depthY);
+                    RunYOLO.objectPos3d = TransformLocalToWorld(ComputeVertex(depthX, depthY, depth));
+                    RunYOLO.objectUpdate = false;
+                }
+            }
+
+            float relativeDegree = Mathf.Rad2Deg * Mathf.Atan2(RunYOLO.objectPos3d.x - position.x, RunYOLO.objectPos3d.z - position.z) - rotation.y;
+            relativeDegree = (relativeDegree + 360) % 360;
+            if (relativeDegree > 180) relativeDegree -= 360; // Keep in range [-180, 180]
             objectInfo.text = String.Format("{0}m, {1}°", RunYOLO.objectPos3d.magnitude.ToString("F2"),
                                                           relativeDegree.ToString("F2"));
 
             // Play audio; fastest rate is 10Hz when next to object, slowest rate is 1Hz when at least 3m from object
-            float rate = rate = Mathf.Lerp(10, 1, depth/3);
+            float rate = rate = Mathf.Lerp(10, 1, RunYOLO.objectPos3d.magnitude/3);
             PlayCollision(relativeDegree, 1/rate - audioDuration);
-
-            RunYOLO.objectDetected = false;
         }
     }
 
@@ -297,19 +312,25 @@ public class DepthImage : MonoBehaviour
         return 99999f;
     }
 
-    // Given image pixel coordinates (x,y) and distance z, returns a point in local camera space, i.e. where camera is at (0,0,0) and z-axis is forward from camera
-    // Made some modifications from original code so that +x is right and +y is up
+    // Given image pixel coordinates (x,y) and distance z, returns a vertex in local camera space.
+    // In portrait mode, x and y will be swapped, i.e. +x is down and +y is right
     public Vector3 ComputeVertex(int x, int y, float z)
     {
         Vector3 vertex = Vector3.negativeInfinity;
         if (z > 0) {
             float vertex_x = (x - principalPoint.x) * z / focalLength.x;
             float vertex_y = (y - principalPoint.y) * z / focalLength.y;
-            vertex.x = -vertex_y;
-            vertex.y = -vertex_x;
+            vertex.x = vertex_x;
+            vertex.y = -vertex_y;
             vertex.z = z;
         }
         return vertex;
+    }
+
+    // Transforms a vertex in local space to world space
+    public Vector3 TransformLocalToWorld(Vector3 vertex)
+    {
+        return localToWorldTransform.MultiplyPoint(vertex);
     }
 
     public static int GetRotation() => Screen.orientation switch

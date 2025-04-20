@@ -60,6 +60,7 @@ public class RunYOLO : MonoBehaviour
 
     private const string objectClass = "cup";
     public static bool objectDetected = false;
+    public static bool objectUpdate = false;
     public static Vector2 objectPosition = Vector2.zero; // Pixel location of object center
     public static Vector3 objectPos3d = Vector3.zero; // Location of object relative to camera
 
@@ -222,7 +223,6 @@ public class RunYOLO : MonoBehaviour
         // Redraw the bounding boxes
         ClearAnnotations();
         int boxesFound = output.shape[0];
-        objectDetected = false;
         for (int n = 0; n < Mathf.Min(boxesFound, 50); n++)
         {
             var box = new BoundingBox
@@ -239,6 +239,7 @@ public class RunYOLO : MonoBehaviour
                 objectPosition = new Vector2(output[n, 0] - imageWidth / 2,
                                              output[n, 1] - imageHeight / 2);
                 objectDetected = true;
+                objectUpdate = true;
             }
         }
 
