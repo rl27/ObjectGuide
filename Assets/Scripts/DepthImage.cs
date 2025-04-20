@@ -142,11 +142,11 @@ public class DepthImage : MonoBehaviour
             RunYOLO.objectPos3d = ComputeVertex(depthX, depthY, depth);
             float relativeDegree = Mathf.Rad2Deg * Mathf.Atan2(RunYOLO.objectPos3d.x, RunYOLO.objectPos3d.z);
             objectInfo.text = String.Format("{0}m, {1}°", RunYOLO.objectPos3d.magnitude.ToString("F2"),
-                                                          Math.Atan2(RunYOLO.objectPos3d.x, RunYOLO.objectPos3d.z).ToString("F2"));
+                                                          relativeDegree.ToString("F2"));
 
             // Play audio; fastest rate is 10Hz when next to object, slowest rate is 1Hz when at least 5m from object
             float rate = rate = Mathf.Lerp(10, 1, depth/5);
-            PlayCollision(0, 1/rate - audioDuration);
+            PlayCollision(relativeDegree, 1/rate - audioDuration);
 
             RunYOLO.objectDetected = false;
         }
