@@ -164,7 +164,7 @@ public class DepthImage : MonoBehaviour
 
             // Play audio; fastest rate is 10Hz when next to object, slowest rate is 1Hz when at least 3m from object
             float rate = rate = Mathf.Lerp(10, 1, distToObject / 3);
-            PlayCollision(2 * relativeDegree, 1/rate - audioDuration);
+            PlayCollision(Mathf.Clamp(2 * relativeDegree, -90, 90), 1/rate - audioDuration);
         }
     }
 
@@ -272,9 +272,22 @@ public class DepthImage : MonoBehaviour
         float maxDimension = Mathf.Round(minDimension * textureAspectRatio);
         Vector2 rectSize;
         if (isDepth) {
-            maxDimension = Screen.height;
-            minDimension = Screen.width;
-            rectSize = new Vector2(minDimension, maxDimension);
+            switch (Screen.orientation)
+            {
+                case ScreenOrientation.LandscapeRight:
+                case ScreenOrientation.LandscapeLeft:
+                    maxDimension = Screen.width;
+                    minDimension = Mathf.Round(maxDimension / textureAspectRatio);
+                    rectSize = new Vector2(maxDimension, minDimension);
+                    break;
+                case ScreenOrientation.PortraitUpsideDown:
+                case ScreenOrientation.Portrait:
+                default:
+                    maxDimension = Screen.height;
+                    minDimension = Mathf.Round(maxDimension / textureAspectRatio);
+                    rectSize = new Vector2(minDimension, maxDimension);
+                    break;
+            }
             rawImage.rectTransform.sizeDelta = rectSize;
 
             // Rotate the depth material to match screen orientation.
