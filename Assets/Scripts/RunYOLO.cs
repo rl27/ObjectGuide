@@ -58,7 +58,7 @@ public class RunYOLO : MonoBehaviour
     float displayWidth;
     float displayHeight;
 
-    private const string objectClass = "cup";
+    private const string objectClass = "clock";
     public static bool objectDetected = false;
     public static bool objectUpdate = false;
     public static Vector2 objectPosition = Vector2.zero; // Pixel location of object center
