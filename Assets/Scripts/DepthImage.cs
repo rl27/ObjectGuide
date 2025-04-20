@@ -158,12 +158,13 @@ public class DepthImage : MonoBehaviour
             float relativeDegree = Mathf.Rad2Deg * Mathf.Atan2(RunYOLO.objectPos3d.x - position.x, RunYOLO.objectPos3d.z - position.z) - rotation.y;
             relativeDegree = (relativeDegree + 360) % 360;
             if (relativeDegree > 180) relativeDegree -= 360; // Keep in range [-180, 180]
-            objectInfo.text = String.Format("{0}m, {1}°", RunYOLO.objectPos3d.magnitude.ToString("F2"),
+            float distToObject = (position - RunYOLO.objectPos3d).magnitude;
+            objectInfo.text = String.Format("{0}m, {1}°", distToObject.ToString("F2"),
                                                           relativeDegree.ToString("F2"));
 
             // Play audio; fastest rate is 10Hz when next to object, slowest rate is 1Hz when at least 3m from object
-            float rate = rate = Mathf.Lerp(10, 1, RunYOLO.objectPos3d.magnitude/3);
-            PlayCollision(relativeDegree, 1/rate - audioDuration);
+            float rate = rate = Mathf.Lerp(10, 1, distToObject / 3);
+            PlayCollision(2 * relativeDegree, 1/rate - audioDuration);
         }
     }
 
