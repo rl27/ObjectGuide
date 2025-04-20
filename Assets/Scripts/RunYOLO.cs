@@ -39,12 +39,6 @@ public class RunYOLO : MonoBehaviour
 
     List<GameObject> boxPool = new();
 
-    [Tooltip("Intersection over union threshold used for non-maximum suppression")]
-    [SerializeField, Range(0, 1)] float iouThreshold = 0.3f;
-
-    [Tooltip("Confidence score threshold used for non-maximum suppression")]
-    [SerializeField, Range(0, 1)] float scoreThreshold = 0.3f;
-
     Tensor<float> centersToCorners;
     public struct BoundingBox
     {
@@ -80,11 +74,7 @@ public class RunYOLO : MonoBehaviour
         #if UNITY_EDITOR
             testing = true;
             testPNG = VisionUtils.LoadPNG("Assets/Scripts/test.png");
-            displayImage.enabled = true;
-        #else
-            // Scale the locations of bounding boxes to be accurate on phone display
-            displayWidth = Screen.height * 480 / 640;
-            displayHeight = Screen.height * 480 / 640;
+            displayImage.enabled = true;    
         #endif
 
         // Parse class labels
@@ -154,6 +144,12 @@ public class RunYOLO : MonoBehaviour
         //             0,      -0.5f,  0,      0.5f
         // });
 
+        // // Intersection over union threshold used for non-maximum suppression
+        // float iouThreshold = 0.3f;
+
+        // // Confidence score threshold used for non-maximum suppression
+        // float scoreThreshold = 0.3f;
+
         // // Here we transform the output of the model1 by feeding it through a Non-Max-Suppression layer.
         // var graph = new FunctionalGraph();
         // var inputs = graph.AddInputs(model1);
@@ -178,6 +174,12 @@ public class RunYOLO : MonoBehaviour
 
     private void Update()
     {
+        #if !UNITY_EDITOR
+            // Scale the locations of bounding boxes to be accurate on phone display
+            displayWidth = Mathf.Max(Screen.height, Screen.width) * 480 / 640;
+            displayHeight = displayWidth;
+        #endif
+
         if (testing) {
             StartCoroutine(ExecuteML(testPNG));
         }

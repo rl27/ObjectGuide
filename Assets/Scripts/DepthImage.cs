@@ -144,8 +144,8 @@ public class DepthImage : MonoBehaviour
             objectInfo.text = String.Format("{0}m, {1}°", RunYOLO.objectPos3d.magnitude.ToString("F2"),
                                                           relativeDegree.ToString("F2"));
 
-            // Play audio; fastest rate is 10Hz when next to object, slowest rate is 1Hz when at least 5m from object
-            float rate = rate = Mathf.Lerp(10, 1, depth/5);
+            // Play audio; fastest rate is 10Hz when next to object, slowest rate is 1Hz when at least 3m from object
+            float rate = rate = Mathf.Lerp(10, 1, depth/3);
             PlayCollision(relativeDegree, 1/rate - audioDuration);
 
             RunYOLO.objectDetected = false;
@@ -258,18 +258,7 @@ public class DepthImage : MonoBehaviour
         if (isDepth) {
             maxDimension = Screen.height;
             minDimension = Screen.width;
-            switch (Screen.orientation)
-            {
-                case ScreenOrientation.LandscapeRight:
-                case ScreenOrientation.LandscapeLeft:
-                    rectSize = new Vector2(maxDimension, minDimension);
-                    break;
-                case ScreenOrientation.PortraitUpsideDown:
-                case ScreenOrientation.Portrait:
-                default:
-                    rectSize = new Vector2(minDimension, maxDimension);
-                    break;
-            }
+            rectSize = new Vector2(minDimension, maxDimension);
             rawImage.rectTransform.sizeDelta = rectSize;
 
             // Rotate the depth material to match screen orientation.
