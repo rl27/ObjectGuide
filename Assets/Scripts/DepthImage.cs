@@ -139,13 +139,33 @@ public class DepthImage : MonoBehaviour
         else curTime += Time.unscaledDeltaTime;
 
         // Check if an object was detected
-        // Assumptions: portrait mode; depth image height = RGB image height;
-        //              depth image resolution = 480x640; model input/output resolution = 480x480
+        // Assumption: depth image sees the same height-wise as the RGB image
+        //             RGB image resolution = 480x640; model input/output resolution = 480x480
         if (RunYOLO.objectDetected) {
             if (RunYOLO.objectUpdate) {
                 // Convert object pixel location in the 480x480 camera image to a pixel location in the depth image
-                int depthX = (int) (depthWidth / 2 + depthWidth / 640f * RunYOLO.objectPosition.y);
-                int depthY = (int) (depthHeight / 2 - depthWidth / 640f * RunYOLO.objectPosition.x);
+                int depthX, depthY;
+                float ratio = depthWidth / 640f; // RGB to depth height pixel ratio
+                switch (Screen.orientation)
+                {
+                    case ScreenOrientation.LandscapeLeft:
+                        depthX = (int) (depthWidth / 2 + ratio * RunYOLO.objectPosition.x);
+                        depthY = (int) (depthHeight / 2 + ratio * RunYOLO.objectPosition.y);
+                        break;
+                    case ScreenOrientation.LandscapeRight:
+                        depthX = (int) (depthWidth / 2 - ratio * RunYOLO.objectPosition.x);
+                        depthY = (int) (depthHeight / 2 - ratio * RunYOLO.objectPosition.y);
+                        break;
+                    case ScreenOrientation.PortraitUpsideDown:
+                        depthX = (int) (depthWidth / 2 - ratio * RunYOLO.objectPosition.y);
+                        depthY = (int) (depthHeight / 2 + ratio * RunYOLO.objectPosition.x);
+                        break;
+                    case ScreenOrientation.Portrait:
+                    default:
+                        depthX = (int) (depthWidth / 2 + ratio * RunYOLO.objectPosition.y);
+                        depthY = (int) (depthHeight / 2 - ratio * RunYOLO.objectPosition.x);
+                        break;
+                }
 
                 if (depthX < depthWidth && depthX > 0 && depthY < depthHeight && depthY > 0) {
                     // Get depth & position of object relative to camera
