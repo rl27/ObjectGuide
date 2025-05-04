@@ -183,7 +183,7 @@ public class DepthImage : MonoBehaviour
                                                           relativeDegree.ToString("F2"));
 
             // Play audio; fastest rate is 10Hz when next to object, slowest rate is 1Hz when at least 3m from object
-            float rate = rate = Mathf.Lerp(10, 1, distToObject / 3);
+            float rate = Mathf.Lerp(10, 1, distToObject / 3);
             PlayCollision(Mathf.Clamp(2 * relativeDegree, -90, 90), 1/rate - audioDuration);
         }
     }
