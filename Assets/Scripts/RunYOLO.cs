@@ -187,7 +187,7 @@ public class RunYOLO : MonoBehaviour
     }
 
     bool working = false;
-    int layersPerFrame = 83;
+    int layersPerFrame = 75;
     public IEnumerator ExecuteML(Texture inputTex)
     {
         // Exit function if already running model
@@ -203,9 +203,12 @@ public class RunYOLO : MonoBehaviour
         // Execute model over multiple frames
         var enumerator = worker.ScheduleIterable(inputTensor); 
         int it = 0;
+        layersPerFrame = 75;
         while (enumerator.MoveNext()) {
             if (++it % layersPerFrame == 0) // Wait for next frame once layersPerFrame layers are done
                 yield return null;
+            if (it >= 225)
+                layersPerFrame = 8;
         }
 
         yield return null;
