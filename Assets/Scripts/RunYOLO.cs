@@ -34,8 +34,8 @@ public class RunYOLO : MonoBehaviour
     private Sprite borderSprite;
 
     // Image size for the model
-    private const int imageWidth = 640;
-    private const int imageHeight = 640;
+    private const int imageWidth = 480;
+    private const int imageHeight = 480;
 
     List<GameObject> boxPool = new();
 
@@ -58,7 +58,7 @@ public class RunYOLO : MonoBehaviour
     float displayWidth;
     float displayHeight;
 
-    private const string objectClass = "clock";
+    private const string objectClass = "cup";
     public static bool objectDetected = false;
     public static bool objectUpdate = false;
     public static Vector2 objectPosition = Vector2.zero; // Pixel location of object center
@@ -187,8 +187,7 @@ public class RunYOLO : MonoBehaviour
     }
 
     bool working = false;
-    int layersPerFrame = 83;
-    bool asdf = true;
+    int layersPerFrame = 100;
     public IEnumerator ExecuteML(Texture inputTex)
     {
         // Exit function if already running model
@@ -204,7 +203,9 @@ public class RunYOLO : MonoBehaviour
         // Execute model over multiple frames
         var enumerator = worker.ScheduleIterable(inputTensor); 
         int it = 0;
+        layersPerFrame = 100;
         while (enumerator.MoveNext()) {
+            if (it == 200) layersPerFrame = 5;
             if (++it % layersPerFrame == 0) // Wait for next frame once layersPerFrame layers are done
                 yield return null;
         }
