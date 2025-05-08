@@ -34,8 +34,8 @@ public class RunYOLO : MonoBehaviour
     private Sprite borderSprite;
 
     // Image size for the model
-    private const int imageWidth = 480;
-    private const int imageHeight = 480;
+    private const int imageWidth = 640;
+    private const int imageHeight = 640;
 
     List<GameObject> boxPool = new();
 
@@ -188,6 +188,7 @@ public class RunYOLO : MonoBehaviour
 
     bool working = false;
     int layersPerFrame = 83;
+    bool asdf = true;
     public IEnumerator ExecuteML(Texture inputTex)
     {
         // Exit function if already running model
@@ -209,39 +210,37 @@ public class RunYOLO : MonoBehaviour
         }
 
         yield return null;
-        using var output = (worker.PeekOutput("output_0") as Tensor<float>).ReadbackAndClone();
-        using var labelIDs = (worker.PeekOutput("output_1") as Tensor<int>).ReadbackAndClone();
-        yield return null;
-
-        float scaleX = displayWidth / imageWidth;
-        float scaleY = displayHeight / imageHeight;
-
-        #if UNITY_EDITOR // Show image if in Unity editor
-            displayImage.texture = resizedTex;
-        #endif
+        using var output = (worker.PeekOutput() as Tensor<float>).ReadbackAndClone(); // (1, 300, 6): xmin, ymin, xmax, ymax, score, id
 
         // Redraw the bounding boxes
         ClearAnnotations();
-        int boxesFound = output.shape[0];
-        for (int n = 0; n < Mathf.Min(boxesFound, 50); n++)
-        {
+        float scaleX = displayWidth / imageWidth;
+        float scaleY = displayHeight / imageHeight;
+        float threshold = 0.5f;
+        for (int i = 0; i < output.shape[1]; i++) {
+            if (output[0,i,4] < threshold) break; // Can break since rows are sorted in descending order
+
             var box = new BoundingBox
             {
-                centerX = output[n, 0] * scaleX - displayWidth / 2,
-                centerY = output[n, 1] * scaleY - displayHeight / 2,
-                width = output[n, 2] * scaleX,
-                height = output[n, 3] * scaleY,
-                label = labels[labelIDs[n]],
+                width = (output[0, i, 2] - output[0, i, 0]) * scaleX,
+                height = (output[0, i, 3] - output[0, i, 1]) * scaleY,
+                centerX = ((output[0, i, 0] + output[0, i, 2]) * scaleX - displayWidth) / 2,
+                centerY = ((output[0, i, 1] + output[0, i, 3]) * scaleY - displayWidth) / 2,
+                label = labels[(int) output[0,i,5]],
             };
-            DrawBox(box, n, displayHeight * 0.05f);
+            DrawBox(box, i, displayHeight * 0.05f);
 
             if (box.label == objectClass) {
-                objectPosition = new Vector2(output[n, 0] - imageWidth / 2,
-                                             output[n, 1] - imageHeight / 2);
+                objectPosition = new Vector2(box.centerX / scaleX,
+                                             box.centerY / scaleY);
                 objectDetected = true;
                 objectUpdate = true;
             }
         }
+
+        #if UNITY_EDITOR // Show image if in Unity editor
+            displayImage.texture = resizedTex;
+        #endif
 
         working = false;
     }

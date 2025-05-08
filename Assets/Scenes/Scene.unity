@@ -1403,7 +1403,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f47d4233261a9174ea2de5a9dbf22362, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modelAsset: {fileID: 5022602860645237092, guid: 983910f3ce33477429616c05283ac537, type: 3}
+  modelAsset: {fileID: 5022602860645237092, guid: f832cb976b88ee747a9c1557d5420878, type: 3}
   classesAsset: {fileID: 4900000, guid: 44008b34cc60a714d8efa9ab7bd39fcb, type: 3}
   displayImage: {fileID: 800233910}
   borderTexture: {fileID: 2800000, guid: df1ee939ef9cdb1469f690b20127f8f6, type: 3}
