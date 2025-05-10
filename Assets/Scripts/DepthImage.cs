@@ -90,7 +90,7 @@ public class DepthImage : MonoBehaviour
 
     void Awake()
     {
-        Application.targetFrameRate = 30;
+        Application.targetFrameRate = 20;
         QualitySettings.vSyncCount = 0;
 
         camera = m_CameraManager.GetComponent<Camera>();

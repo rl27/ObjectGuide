@@ -58,7 +58,7 @@ public class RunYOLO : MonoBehaviour
     float displayWidth;
     float displayHeight;
 
-    private const string objectClass = "clock";
+    private const string objectClass = "chair";
     public static bool objectDetected = false;
     public static bool objectUpdate = false;
     public static Vector2 objectPosition = Vector2.zero; // Pixel location of object center
@@ -203,12 +203,12 @@ public class RunYOLO : MonoBehaviour
         // Execute model over multiple frames
         var enumerator = worker.ScheduleIterable(inputTensor); 
         int it = 0;
-        layersPerFrame = 75;
+        layersPerFrame = 112;
         while (enumerator.MoveNext()) {
             if (++it % layersPerFrame == 0) // Wait for next frame once layersPerFrame layers are done
                 yield return null;
             if (it >= 225)
-                layersPerFrame = 8;
+                layersPerFrame = 12;
         }
 
         yield return null;
