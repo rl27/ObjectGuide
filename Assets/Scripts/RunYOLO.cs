@@ -58,7 +58,7 @@ public class RunYOLO : MonoBehaviour
     float displayWidth;
     float displayHeight;
 
-    private const string objectClass = "chair";
+    public static string objectClass = "chair";
     public static bool objectDetected = false;
     public static bool objectUpdate = false;
     public static Vector2 objectPosition = Vector2.zero; // Pixel location of object center
@@ -320,5 +320,11 @@ public class RunYOLO : MonoBehaviour
     {
         centersToCorners?.Dispose();
         worker?.Dispose();
+    }
+
+    // Parse text input
+    public void ClassEntered(string input)
+    {
+        objectClass = input;
     }
 }
