@@ -6,7 +6,7 @@ ES224 project: Object detection & depth estimation in Unity
 
 1. Install Unity Hub
 
-2. Install Unity version 2023.2.13f1 with Android Build Support and/or iOS Build Support (depending on what kind of phone you're using).
+2. Install Unity version 6000.0.54f1 with Android Build Support and/or iOS Build Support.
 
 3. Clone this repo and open it in Unity Hub.
 
