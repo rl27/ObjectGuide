@@ -2,11 +2,11 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Sentis;
+using Unity.InferenceEngine;
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
-using FF = Unity.Sentis.Functional;
+using FF = Unity.InferenceEngine.Functional;
 
 
 public class RunYOLO : MonoBehaviour
