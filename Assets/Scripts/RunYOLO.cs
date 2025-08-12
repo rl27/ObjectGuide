@@ -64,6 +64,9 @@ public class RunYOLO : MonoBehaviour
     public static Vector2 objectPosition = Vector2.zero; // Pixel location of object center
     public static Vector3 objectPos3d = Vector3.zero; // Location of object relative to camera
 
+    public static Matrix4x4 tempLocalToWorld = Matrix4x4.identity;
+    public static Matrix4x4 finalLocalToWorld = Matrix4x4.identity;
+
     void Start()
     {
         displayWidth = displayImage.rectTransform.rect.width;
@@ -194,6 +197,8 @@ public class RunYOLO : MonoBehaviour
         if (working) yield break;
         working = true;
 
+        tempLocalToWorld = Camera.main.transform.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0, 0, DepthImage.GetRotationForScreen()));
+
         Texture2D resizedTex = ResizeTexture(inputTex);
         // using Tensor<float> inputTensor = TextureConverter.ToTensor(resizedTex);
         using Tensor<float> inputTensor = new Tensor<float>(new TensorShape(1, 3, imageHeight, imageWidth));
@@ -215,6 +220,8 @@ public class RunYOLO : MonoBehaviour
         using var output = (worker.PeekOutput("output_0") as Tensor<float>).ReadbackAndClone();
         using var labelIDs = (worker.PeekOutput("output_1") as Tensor<int>).ReadbackAndClone();
         yield return null;
+
+        finalLocalToWorld = tempLocalToWorld;
 
         float scaleX = displayWidth / imageWidth;
         float scaleY = displayHeight / imageHeight;

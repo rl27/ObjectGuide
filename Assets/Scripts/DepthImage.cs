@@ -72,8 +72,8 @@ public class DepthImage : MonoBehaviour
     Vector2 focalLength = Vector2.zero;
     Vector2 principalPoint = Vector2.zero;
 
-    private Matrix4x4 localToWorldTransform = Matrix4x4.identity;
-    private Matrix4x4 screenRotation = Matrix4x4.Rotate(Quaternion.identity);
+    // private Matrix4x4 localToWorldTransform = Matrix4x4.identity;
+    // private Matrix4x4 screenRotation = Matrix4x4.Rotate(Quaternion.identity);
     private new Camera camera;
 
     public static Vector3 position;
@@ -127,9 +127,9 @@ public class DepthImage : MonoBehaviour
         // Update camera info
         position = camera.transform.position;
         rotation = camera.transform.rotation.eulerAngles;
-        screenRotation = Matrix4x4.Rotate(Quaternion.Euler(0, 0, GetRotationForScreen()));
-        if (camera.transform.localToWorldMatrix != Matrix4x4.identity)
-            localToWorldTransform = camera.transform.localToWorldMatrix * screenRotation;
+        // screenRotation = Matrix4x4.Rotate(Quaternion.Euler(0, 0, GetRotationForScreen()));
+        // if (camera.transform.localToWorldMatrix != Matrix4x4.identity)
+        //     localToWorldTransform = camera.transform.localToWorldMatrix * screenRotation;
 
         // Update timer for collision audio
         if (lastDSP != AudioSettings.dspTime) {
@@ -143,6 +143,8 @@ public class DepthImage : MonoBehaviour
         //             RGB image resolution = 480x640; model input/output resolution = 480x480
         if (RunYOLO.objectDetected) {
             if (RunYOLO.objectUpdate) {
+                RunYOLO.objectUpdate = false;
+
                 // Convert object pixel location in the 480x480 camera image to a pixel location in the depth image
                 int depthX, depthY;
                 float ratio = depthWidth / 640f; // RGB to depth height pixel ratio
@@ -171,7 +173,6 @@ public class DepthImage : MonoBehaviour
                     // Get depth & position of object relative to camera
                     float depth = GetDepth(depthX, depthY);
                     RunYOLO.objectPos3d = TransformLocalToWorld(ComputeVertex(depthX, depthY, depth));
-                    RunYOLO.objectUpdate = false;
                 }
             }
 
@@ -364,7 +365,7 @@ public class DepthImage : MonoBehaviour
     // Transforms a vertex in local space to world space
     public Vector3 TransformLocalToWorld(Vector3 vertex)
     {
-        return localToWorldTransform.MultiplyPoint(vertex);
+        return RunYOLO.finalLocalToWorld.MultiplyPoint(vertex);
     }
 
     public static int GetRotation() => Screen.orientation switch
@@ -376,7 +377,7 @@ public class DepthImage : MonoBehaviour
         _ => 90
     };
 
-    private int GetRotationForScreen() => Screen.orientation switch
+    public static int GetRotationForScreen() => Screen.orientation switch
     {
         ScreenOrientation.Portrait => -90,
         ScreenOrientation.LandscapeLeft => 0,
