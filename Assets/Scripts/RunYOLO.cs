@@ -66,6 +66,7 @@ public class RunYOLO : MonoBehaviour
 
     public static Matrix4x4 tempLocalToWorld = Matrix4x4.identity;
     public static Matrix4x4 finalLocalToWorld = Matrix4x4.identity;
+    public static byte[] depthArray = new byte[0];
 
     void Start()
     {
@@ -189,7 +190,7 @@ public class RunYOLO : MonoBehaviour
         }
     }
 
-    bool working = false;
+    public static bool working = false;
     int layersPerFrame = 75;
     public IEnumerator ExecuteML(Texture inputTex)
     {
@@ -206,7 +207,7 @@ public class RunYOLO : MonoBehaviour
         worker.Schedule(inputTensor);
 
         // Execute model over multiple frames
-        var enumerator = worker.ScheduleIterable(inputTensor); 
+        var enumerator = worker.ScheduleIterable(inputTensor);
         int it = 0;
         layersPerFrame = 112;
         while (enumerator.MoveNext()) {
@@ -222,6 +223,7 @@ public class RunYOLO : MonoBehaviour
         yield return null;
 
         finalLocalToWorld = tempLocalToWorld;
+        depthArray = (byte[]) DepthImage.depthArray.Clone();
 
         float scaleX = displayWidth / imageWidth;
         float scaleY = displayHeight / imageHeight;

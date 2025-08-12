@@ -63,7 +63,7 @@ public class DepthImage : MonoBehaviour
     private double audioDuration; // Audio duration = 0.0853333333333333
 
     // Depth image data
-    byte[] depthArray = new byte[0];
+    public static byte[] depthArray = new byte[0];
     int depthWidth = 0; // (width, height) = (256, 192) on iPhone 12 Pro
     int depthHeight = 0;
     int depthStride = 4; // Should be either 2 or 4
@@ -198,18 +198,20 @@ public class DepthImage : MonoBehaviour
             using (image) {
                 UpdateRawImage(m_RawImage, image, image.format.AsTextureFormat(), true);
 
-                // Get distance data into depthArray
-                depthWidth = image.width;
-                depthHeight = image.height;
-                UpdateCameraParams();
+                if (!RunYOLO.working) {
+                    // Get distance data into depthArray
+                    depthWidth = image.width;
+                    depthHeight = image.height;
+                    UpdateCameraParams();
 
-                int numPixels = depthWidth * depthHeight;
-                Debug.Assert(image.planeCount == 1, "Plane count is not 1");
-                depthStride = image.GetPlane(0).pixelStride;
-                int numBytes = numPixels * depthStride;
-                if (depthArray.Length != numBytes)
-                    depthArray = new byte[numBytes];
-                image.GetPlane(0).data.CopyTo(depthArray);
+                    int numPixels = depthWidth * depthHeight;
+                    Debug.Assert(image.planeCount == 1, "Plane count is not 1");
+                    depthStride = image.GetPlane(0).pixelStride;
+                    int numBytes = numPixels * depthStride;
+                    if (depthArray.Length != numBytes)
+                        depthArray = new byte[numBytes];
+                    image.GetPlane(0).data.CopyTo(depthArray);
+                }
 
                 success = true;
             }
@@ -327,18 +329,12 @@ public class DepthImage : MonoBehaviour
     // Screen orientation does not change coordinate locations on the screen.
     public float GetDepth(int x, int y)
     {
-        if (depthArray.Length == 0)
-            return 99999f;
-
-        /*
-        Different phones may give image data in different formats
-        */
         int index = (y * depthWidth) + x;
         float depthInMeters = 0;
         if (depthStride == 4) // DepthFloat32
-            depthInMeters = BitConverter.ToSingle(depthArray, depthStride * index);
+            depthInMeters = BitConverter.ToSingle(RunYOLO.depthArray, depthStride * index);
         else if (depthStride == 2) // DepthUInt16
-            depthInMeters = BitConverter.ToUInt16(depthArray, depthStride * index) * 0.001f;
+            depthInMeters = BitConverter.ToUInt16(RunYOLO.depthArray, depthStride * index) * 0.001f;
 
         if (depthInMeters > 0) {
             return depthInMeters;
