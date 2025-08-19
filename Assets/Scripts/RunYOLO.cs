@@ -8,7 +8,6 @@ using UnityEngine.UI;
 using System.IO;
 using FF = Unity.InferenceEngine.Functional;
 
-
 public class RunYOLO : MonoBehaviour
 {
     [Tooltip("Drag a YOLO model .onnx file here")]
